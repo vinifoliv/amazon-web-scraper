@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #708090;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10%;
+}
+
+form input {
+    min-width: 50%;
+    min-height: 20px;
+    margin: 10px 0;
+
+}
+
+form button {
+    min-width: 15%;
+    color: white;
+    font-weight: bold;
+    background-color: #161911;
+    transition: 0.25s;
+}
+
+form input, form button {
+    border-radius: 5px;
+    padding: 5px;
+    border: none;
+}
+
+form button:hover {
+    background-color: rgb(59, 59, 59);
+}
+
+form button:active {
+    transform: scale(0.85, 0.85);
+}
