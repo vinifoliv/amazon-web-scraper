@@ -4,68 +4,79 @@
     // Express
         const express = require('express');
         const app = express();
-        app.use(express.static("public")); // sets the static files inside the public folder to be open at the main route "/"
+        const cors = require('cors');
+        app.use(cors()); // allows cross-origin resource sharing
+        app.use(express.static("public")); // sets the static files inside the public folder to be open at the 
+                                           // main route "/"
     
     // Axios
         const axios = require('axios').default;
         const instance = axios.create({
-            baseURL: 'https://www.amazon.com/s?k=',
-            headers: { //Amazon blocks web scraping by automatized scripts; so as to avoid it, some appropriate headers had to be used 
+            headers: { // Amazon blocks web scraping by automatized scripts; so as to avoid it, some 
+                       // appropriate headers had to be used 
                 'Accept-Language': 'en-US,en;q=0.5',
-                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0'
+                'User-Agent': 'Product Searcher / 1.0 Project for getting a job'
             }
         });
     
-    // JSamazonDOM
+    // JSDOM
         const jsdom = require('jsdom');
         const { JSDOM } = jsdom;
 
 // Routing
     app.get('/api/scrape/:keyword', (request, response) => {
         // Requesting the page
-        instance.get('' + request.params.keyword).then((html) => {
-            const amazonPage = new JSDOM(html.data).window.document;
+            instance.get('https://www.amazon.com/s?k=' + request.params.keyword).then((html) => {
+            const { data } = html;
+            const amazonPage = new JSDOM(data, {
+                contentType: 'text/html'
+            });
 
-            // Scraping required data through jsDOM
-            const names = amazonPage.getElementsByClassName('a-size-base-plus a-color-base a-text');
-            const ratings = amazonPage.getElementsByClassName('a-icon-alt');
-            const reviewList = amazonPage.getElementsByClassName('a-size-base s-underline-text');
-            const imageURLs = amazonPage.getElementsByClassName('s-image s-image-optimized-rendering');
+        // Scraping required data through jsDOM
+            const titles = amazonPage.window.document.getElementsByClassName('a-size-base-plus a-color-base a-text-normal');
+            const ratings = amazonPage.window.document.getElementsByClassName('a-icon-alt');
+            const reviews = amazonPage.window.document.getElementsByClassName('a-size-base s-underline-text');
+            const images = amazonPage.window.document. getElementsByClassName('s-image s-image-optimized-rendering');
 
-            // Preparing a new HTML with the formatted data
-            const { document } = (new JSDOM('')).window;
+        // Preparing a new HTML with the formatted data
+            const { document } = (new JSDOM('', {
+                contentType: 'text/html'
+            })).window;
             let index = 0;
+            let itemsCount = titles.length;
 
-            console.log(names.item(index));
+            while (index < itemsCount) {
+                const container = document.createElement('div');
 
-            // for (var item in names) {
-            //     const container = document.createElement('div');
-
-            //     // Image
-            //         const image = document.createElement('img');
-            //         image.src = imageURLs[index].src;
-            //         container.appendChild(image);
-
-            //     // Name
-            //         const nameDiv = document.createElement('div');
-            //         nameDiv.value = names[index].value;
-            //         container.appendChild(nameDiv);
+                // Name
+                    const title = amazonPage.window.document.createElement('div');
+                    title.textContent = titles.item(index).textContent;
+                    console.log(title.textContent)
+                    container.appendChild(title);
                 
-            //     // Rating
-            //         const ratingDiv = document.createElement('div');
-            //         ratingDiv.value = ratings[index].value;
-            //         container.appendChild(ratingDiv);
+                // Rating
+                    const rating = amazonPage.window.document.createElement('div');
+                    rating.textContent = ratings.item(index).textContent;
+                    console.log(rating.textContent);
+                    container.appendChild(rating);
 
-            //     // Review number
-            //         const reviewDiv = document.createElement('div');
-            //         reviewDiv.value = reviewList[index].value;
-            //         container.appendChild(reviewDiv);
+                // Review number
+                    const review = amazonPage.window.document.createElement('div');
+                    review.textContent = reviews.item(index).textContent;
+                    console.log(review.textContent);
+                    container.appendChild(review);
 
-            //     document.body.appendChild(container);
-            //     index++;
-            // }
+                // Image
+                    const image = amazonPage.window.document.createElement('img');
+                    image.src = images.item(index).src;
+                    console.log(image.src);
+                    container.appendChild(image);
 
-            //response.send(document.body);
+                 document.body.appendChild(container);
+                 index++;
+            }
+
+            response.send(document.body.innerHTML);
         })
 
         // Error handling
